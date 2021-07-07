@@ -1,5 +1,2 @@
-.airtap.yml
-.github/
-bin/
+.zuul.yml
 perf/
-test/

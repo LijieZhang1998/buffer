@@ -1,5 +1,6 @@
-const B = require('../').Buffer
-const test = require('tape')
+if (process.env.OBJECT_IMPL) global.TYPED_ARRAY_SUPPORT = false
+var B = require('../').Buffer
+var test = require('tape')
 
 test('Buffer.isEncoding', function (t) {
   t.equal(B.isEncoding('HEX'), true)

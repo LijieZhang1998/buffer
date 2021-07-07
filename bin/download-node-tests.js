@@ -1,22 +1,22 @@
 #!/usr/bin/env node
 
-const concat = require('concat-stream')
-const cp = require('child_process')
-const fs = require('fs')
-const hyperquest = require('hyperquest')
-const path = require('path')
-const split = require('split')
-const through = require('through2')
+var concat = require('concat-stream')
+var cp = require('child_process')
+var fs = require('fs')
+var hyperquest = require('hyperquest')
+var path = require('path')
+var split = require('split')
+var through = require('through2')
 
-const url = 'https://api.github.com/repos/nodejs/node/contents'
-const dirs = [
+var url = 'https://api.github.com/repos/nodejs/node/contents'
+var dirs = [
   '/test/parallel',
   '/test/pummel'
 ]
 
-cp.execSync('rm -rf node/test-*.js', { cwd: path.join(__dirname, '../test') })
+cp.execSync('rm -rf node/*.js', { cwd: path.join(__dirname, '../test') })
 
-const httpOpts = {
+var httpOpts = {
   headers: {
     'User-Agent': null
     // auth if github rate-limits you...
@@ -25,7 +25,7 @@ const httpOpts = {
 }
 
 dirs.forEach(function (dir) {
-  const req = hyperquest(url + dir, httpOpts)
+  var req = hyperquest(url + dir, httpOpts)
   req.pipe(concat(function (data) {
     if (req.response.statusCode !== 200) {
       throw new Error(url + dir + ': ' + data.toString())
@@ -38,26 +38,15 @@ function downloadBufferTests (dir, files) {
   files.forEach(function (file) {
     if (!/test-buffer.*/.test(file.name)) return
 
-    const skipFileNames = [
-      // Only applies to node. Calls into C++ and needs to ensure the prototype can't
-      // be faked, or else there will be a segfault.
-      'test-buffer-fakes.js',
-      // Tests SharedArrayBuffer support, which is obscure and now temporarily
-      // disabled in all browsers due to the Spectre/Meltdown security issue.
-      'test-buffer-sharedarraybuffer.js',
-      // References Node.js internals, irrelevant to browser implementation
-      'test-buffer-bindingobj-no-zerofill.js',
-      // Destructive test, modifies buffer.INSPECT_MAX_BYTES and causes later tests
-      // to fail.
-      'test-buffer-inspect.js'
-    ]
-
-    // Skip test files with these names
-    if (skipFileNames.includes(file.name)) return
+    if (file.name === 'test-buffer-fakes.js') {
+      // These teses only apply to node, where they're calling into C++ and need to
+      // ensure the prototype can't be faked, or else there will be a segfault.
+      return
+    }
 
     console.log(file.download_url)
 
-    const out = path.join(__dirname, '../test/node', file.name)
+    var out = path.join(__dirname, '../test/node', file.name)
     hyperquest(file.download_url, httpOpts)
       .pipe(split())
       .pipe(testfixer(file.name))
@@ -69,21 +58,27 @@ function downloadBufferTests (dir, files) {
 }
 
 function testfixer (filename) {
-  let firstline = true
+  var firstline = true
 
   return through(function (line, enc, cb) {
     line = line.toString()
 
     if (firstline) {
       // require buffer explicitly
-      const preamble = 'var Buffer = require(\'../../\').Buffer;'
+      var preamble = 'var Buffer = require(\'../../\').Buffer;\n'
       if (/use strict/.test(line)) line += '\n' + preamble
-      else line += preamble + '\n' + line
+      else line + preamble + '\n' + line
       firstline = false
     }
 
+    // use `var` instead of `const`/`let`
+    line = line.replace(/(const|let) /g, 'var ')
+
+    // make `var common = require('common')` work
+    line = line.replace(/(var common = require.*)/g, 'var common = { skip: function () {} };')
+
     // make `require('../common')` work
-    line = line.replace(/require\('\.\.\/common'\);/g, 'require(\'./common\');')
+    line = line.replace(/require\('\.\.\/common'\);/g, '')
 
     // require browser buffer
     line = line.replace(/(.*)require\('buffer'\)(.*)/g, '$1require(\'../../\')$2')

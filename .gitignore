@@ -1,4 +1,1 @@
-.DS_Store
-.airtap.yml
-*.log
-node_modules/
+.zuul.yml

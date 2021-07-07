@@ -1,13 +1,14 @@
 'use strict';
 var Buffer = require('../../').Buffer;
 
-require('./common');
-const assert = require('assert');
 
-const safe = Buffer.alloc(10);
+
+var assert = require('assert');
+
+var safe = Buffer.alloc(10);
 
 function isZeroFilled(buf) {
-  for (let n = 0; n < buf.length; n++)
+  for (var n = 0; n < buf.length; n++)
     if (buf[n] !== 0) return false;
   return true;
 }

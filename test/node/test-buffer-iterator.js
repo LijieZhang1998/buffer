@@ -1,11 +1,12 @@
 'use strict';
 var Buffer = require('../../').Buffer;
-require('./common');
-const assert = require('assert');
 
-const buffer = Buffer.from([1, 2, 3, 4, 5]);
-let arr;
-let b;
+
+var assert = require('assert');
+
+var buffer = Buffer.from([1, 2, 3, 4, 5]);
+var arr;
+var b;
 
 // buffers should be iterable
 

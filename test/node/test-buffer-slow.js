@@ -1,19 +1,21 @@
 'use strict';
 var Buffer = require('../../').Buffer;
 
-const common = require('./common');
-const assert = require('assert');
-const buffer = require('../../');
-const SlowBuffer = buffer.SlowBuffer;
 
-const ones = [1, 1, 1, 1];
+
+var assert = require('assert');
+var buffer = require('../../');
+var Buffer = buffer.Buffer;
+var SlowBuffer = buffer.SlowBuffer;
+
+var ones = [1, 1, 1, 1];
 
 // should create a Buffer
-let sb = SlowBuffer(4);
+var sb = SlowBuffer(4);
 assert(sb instanceof Buffer);
 assert.strictEqual(sb.length, 4);
 sb.fill(1);
-for (const [key, value] of sb.entries()) {
+for (var [key, value] of sb.entries()) {
   assert.deepStrictEqual(value, ones[key]);
 }
 
@@ -25,7 +27,7 @@ sb = SlowBuffer(4);
 assert(sb instanceof Buffer);
 assert.strictEqual(sb.length, 4);
 sb.fill(1);
-for (const [key, value] of sb.entries()) {
+for (var [key, value] of sb.entries()) {
   assert.deepStrictEqual(value, ones[key]);
 }
 
@@ -35,9 +37,7 @@ try {
   assert.strictEqual(
     SlowBuffer(buffer.kMaxLength).length, buffer.kMaxLength);
 } catch (e) {
-  // Don't match on message as it is from the JavaScript engine. V8 and
-  // ChakraCore provide different messages.
-  assert.strictEqual(e.name, 'RangeError');
+  assert.equal(e.message, 'Array buffer allocation failed');
 }
 
 // should work with number-coercible values
@@ -51,23 +51,13 @@ assert.strictEqual(SlowBuffer({}).length, 0);
 assert.strictEqual(SlowBuffer('string').length, 0);
 
 // should throw with invalid length
-const bufferMaxSizeMsg = common.expectsError({
-  code: 'ERR_INVALID_OPT_VALUE',
-  type: RangeError,
-  message: /^The value "[^"]*" is invalid for option "size"$/
-}, 2);
 assert.throws(function() {
   SlowBuffer(Infinity);
-}, bufferMaxSizeMsg);
-common.expectsError(function() {
+}, 'invalid Buffer length');
+assert.throws(function() {
   SlowBuffer(-1);
-}, {
-  code: 'ERR_INVALID_OPT_VALUE',
-  type: RangeError,
-  message: 'The value "-1" is invalid for option "size"'
-});
-
+}, 'invalid Buffer length');
 assert.throws(function() {
   SlowBuffer(buffer.kMaxLength + 1);
-}, bufferMaxSizeMsg);
+}, 'invalid Buffer length');
 
