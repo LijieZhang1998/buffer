@@ -821,6 +821,10 @@ function hexWrite (buf, string, offset, length) {
 }
 
 function utf8Write (buf, string, offset, length) {
+  //This condition is added to support utf8Write(val, pos) in protobuf.js API for gRPC usage
+  if (offset === undefined && length === undefined && (typeof buf === 'string' || buf instanceof String) && (typeof string === 'number' && string % 1 == 0)) {
+    return blitBuffer(utf8ToBytes(buf, this.length - string), this, string, buf.length)
+  }
   return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
 }
 
